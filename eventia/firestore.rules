@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function esDueno(eventoId) {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/eventos/$(eventoId)).data.user_id == request.auth.uid;
+    }
+
+    match /perfiles/{userId} {
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /eventos/{eventoId} {
+      allow read, update, delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+
+      match /gastos/{gastoId} {
+        allow read, write: if esDueno(eventoId);
+      }
+
+      match /cronograma/{itemId} {
+        allow read, write: if esDueno(eventoId);
+      }
+
+      match /lugares/{lugarId} {
+        allow read, write: if esDueno(eventoId);
+      }
+
+      // invitados: el dueño puede todo. Un invitado sin login puede leer su
+      // propia invitación y actualizar SOLO el campo "confirmado" (para el RSVP).
+      match /invitados/{invitadoId} {
+        allow read: if true;
+        allow create, delete: if esDueno(eventoId);
+        allow update: if esDueno(eventoId) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['confirmado']);
+      }
+    }
+  }
+}
