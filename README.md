@@ -7,7 +7,7 @@ presupuesto, cronograma generado con IA, buscador de lugares/proveedores, e invi
 - Next.js 14 + Tailwind CSS
 - Firebase (Auth + Firestore)
 - Groq (generador de cronograma con IA)
-- Google Places API (buscador de lugares)
+- OpenStreetMap Nominatim (buscador de lugares — gratis, sin API key, sin tarjeta)
 
 ## Setup rápido
 
@@ -23,7 +23,10 @@ npm run dev
 Ver `.env.example`. Necesitás:
 1. Un proyecto de Firebase con **Authentication (Email/Password)** y **Firestore Database** activados
 2. Una API key de **Groq** (gratis en console.groq.com/keys)
-3. Una API key de **Google Places** (console.cloud.google.com → habilitar "Places API")
+
+El buscador de lugares no necesita ninguna key — usa OpenStreetMap Nominatim,
+que es público y gratuito (solo pide un User-Agent identificable, ya
+configurado en el código).
 
 ## Base de datos (Firestore)
 
@@ -71,4 +74,3 @@ tener más tarjetas en "Mis eventos".
 Vercel — conectar el repo y setear las env vars (todas con prefijo
 `NEXT_PUBLIC_` excepto `GROQ_API_KEY` y `GOOGLE_PLACES_API_KEY`, que quedan
 ocultas en el servidor).
-# eventia

@@ -1,35 +1,44 @@
 import { NextResponse } from "next/server";
 
+// Usa OpenStreetMap Nominatim: gratis, sin API key, sin tarjeta.
+// Único requisito de su política de uso: un User-Agent identificable
+// y no pasarse de 1 request por segundo (nuestro uso es manual, así que sobra).
+const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+
 export async function POST(req) {
   try {
-    if (!process.env.GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json({ error: "Falta configurar GOOGLE_PLACES_API_KEY en el servidor." }, { status: 500 });
-    }
-
     const { query } = await req.json();
     if (!query || !query.trim()) {
-      return NextResponse.json({ error: "Escribí qué estás buscando (ej. 'salón de fiestas infantiles')." }, { status: 400 });
+      return NextResponse.json({ error: "Escribí qué estás buscando (ej. 'salón de fiestas infantiles en Berazategui')." }, { status: 400 });
     }
 
-    const url = new URL("https://maps.googleapis.com/maps/api/place/textsearch/json");
-    url.searchParams.set("query", query);
-    url.searchParams.set("language", "es");
-    url.searchParams.set("region", "ar");
-    url.searchParams.set("key", process.env.GOOGLE_PLACES_API_KEY);
+    const url = new URL(NOMINATIM_URL);
+    url.searchParams.set("q", query);
+    url.searchParams.set("format", "jsonv2");
+    url.searchParams.set("addressdetails", "1");
+    url.searchParams.set("limit", "10");
+    url.searchParams.set("countrycodes", "ar");
+    url.searchParams.set("accept-language", "es");
 
-    const res = await fetch(url.toString());
+    const res = await fetch(url.toString(), {
+      headers: {
+        // Nominatim exige un User-Agent identificable — no funciona sin esto.
+        "User-Agent": "EventIA/1.0 (app de organizacion de eventos)",
+      },
+    });
+
+    if (!res.ok) {
+      return NextResponse.json({ error: `Nominatim respondió con error ${res.status}` }, { status: 500 });
+    }
+
     const data = await res.json();
 
-    if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
-      return NextResponse.json({ error: `Google Places: ${data.status} — ${data.error_message || ""}` }, { status: 500 });
-    }
-
-    const resultados = (data.results || []).slice(0, 10).map((r) => ({
-      place_id: r.place_id,
-      nombre: r.name,
-      direccion: r.formatted_address,
-      rating: r.rating || null,
-      total_ratings: r.user_ratings_total || null,
+    const resultados = (data || []).map((r) => ({
+      place_id: String(r.place_id),
+      nombre: r.name || r.display_name.split(",")[0],
+      direccion: r.display_name,
+      rating: null, // OpenStreetMap no tiene ratings, a diferencia de Google
+      total_ratings: null,
     }));
 
     return NextResponse.json({ resultados });

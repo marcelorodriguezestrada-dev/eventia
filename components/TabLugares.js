@@ -63,6 +63,7 @@ export default function TabLugares({ evento }) {
     <div className="flex flex-col gap-6">
       <form onSubmit={handleBuscar} className="bg-white border border-gray-200 rounded-xl p-5">
         <p className="text-xs font-semibold text-[#7c3aed] uppercase tracking-widest mb-3">🔍 Buscar lugares y proveedores</p>
+        <p className="text-xs text-gray-400 mb-3">Datos de © OpenStreetMap contributors — sin ratings, pero gratis y sin API key.</p>
         <div className="flex gap-2 flex-wrap">
           <input
             value={query} onChange={(e) => setQuery(e.target.value)}
