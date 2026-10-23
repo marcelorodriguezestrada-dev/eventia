@@ -47,8 +47,9 @@ Respondé ÚNICAMENTE con este JSON, sin markdown ni texto extra:
         Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
         max_tokens: 2000,
+        response_format: { type: "json_object" },
         messages: [
           {
             role: "system",
